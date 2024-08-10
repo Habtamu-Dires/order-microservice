@@ -1,0 +1,77 @@
+server:
+  port: 9000
+spring:
+  application:
+    name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/spring-uservice
+#  cloud:
+#    gateway:
+#      routes:
+#        - id: product_service
+#          uri: http://localhost:8080
+#          predicates:
+#            - Path=/api/v1/products
+#          filters:
+#            - name: CircuitBreaker
+#              args:
+#                name: productServiceCircuitBreaker
+#                fallbackUri: forward:/fallbackRoute
+
+# API Documentation
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Product Service
+        url: aggregate/product-service/v3/api-docs
+      - name: Order Service
+        url: aggregate/order-service/v3/api-docs
+      - name: Inventory Service
+        url: aggregate/inventory-service/v3/api-docs
+  api-docs:
+    path: /api-docs
+
+# Actuator Endpoint
+# Actuator => for monitoring and manging Spring Boot Applications
+# it provides endpoint to view applications health, metrics and more.
+management:
+  health:
+    circuitbreakers.enabled: true  #enalbe health indicators for Resilience4j circuit breakers. It allows you to see the health status of each circuit breaker via the /actuator/health endpoint.
+  endpoints.web.exposure.include: '*' # expose all actuator endpoint
+  endpoint.health.show-details: always
+
+#Resilince4j Properties
+# Resilince4j provides various fault tolerance patterns such as circuit breaker, rate limiter and retries
+resilience4j:
+  circuitbreaker.configs.default:
+    registerHealthIndicator: true  # register health indicator
+    slidingWindowType: COUNT_BASED # failure rate based on COUNT BASED , there is also TIME BASED
+    slidingWindowSize: 10 # it will count 10 request then on/off circuit breaker
+    failureRateThreshold: 50  #  after 50% (with the window size last (10 tries) ), it will stop allowing requests to the underlying service. The failure rate is recalculated each time the window shifts.
+    waitDurationInOpenState: 5s    # wait duration in open state
+    permittedNumberOfCallsInHalfOpenState: 3 #The number of calls allowed when the circuit breaker is in the half-open state. These calls help determine if the system has recovered.
+    automaticTransitionFromOpenToHalfOpenEnabled: true
+    default.minimum-number-of-calls: 5 # when the app starting app ,  it waits until at least 5 calls have been made before it starts calculating the failure rate
+  #Timeout
+  timelimiter.configs.default.timeout-duration: 3s # the maximum time a call is allowed to take before it is considered a timeout. If a call exceeds this duration, it will be marked as failed.
+  #Resilience4J Retry Properties
+  retry:configs:default:
+    max-attempts: 3 # number of attempts to retry failed calls a specified number of times before considering them as final failures
+    #If a call fails, it will be retried up to 3 times (as per the retry configuration).
+    #The final result of these retries (either success or failure) will be counted as one call in the circuit breaker's metrics
+    wait-duration: 2s # The wait duration between retry attempts
+
+
+#    Summary:
+#
+#      default.minimum-number-of-calls:
+#        5: The circuit breaker starts monitoring after at least 5 calls, ensuring it doesn't open prematurely.
+#      failureRateThreshold:
+#        50: The circuit breaker opens if 50% or more of the calls fail within the sliding window.
+#      Retry Mechanism: Retries work independently but contribute to the final outcome of a call in the circuit breaker's evaluation. Each retried call, if successful, will prevent a failure from being counted in the circuit breaker's metrics
+
+

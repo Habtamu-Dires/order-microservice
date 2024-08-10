@@ -1,0 +1,26 @@
+server:
+  port: 8050
+spring:
+  application:
+    name: notification-service
+  kafka:
+    consumer:
+      bootstrap-server: localhost:9092
+      group-id: notificationService
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        schema:
+          registry:
+            url: http://127.0.0.1:8085
+        specific:
+          avro:
+            reader: true
+
+  # Mail Properties
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: 0ae8a8fe8f4bf9
+    password: ae8618e3c88bc4
+    protocol: smtp

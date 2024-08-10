@@ -1,0 +1,56 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: product-service
+  data:
+    mongodb:
+      username: hab
+      password: password
+      host: localhost
+      port: 27017
+      database: product_db
+      authentication-database: admin
+  #security
+  security:
+    oauth2:
+      client:
+        client-id: spring-client
+        client-secret: JxqtAwWUhHEgRPJF9piCO11oTwb6DfI9
+        access-token-uri: http://localhost:9090/realms/spring-uservice/protocol/openid-connect/token
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+
+application:
+  config:
+    inventory-url: http://localhost:9000
+
+# Actuator end point
+management:
+  health:
+    circuitbreakers.enabled: true  #enalbe health indicators for Resilience4j circuit breakers. It allows you to see the health status of each circuit breaker via the /actuator/health endpoint.
+  endpoints.web.exposure.include: '*' # expose all actuator endpoint
+  endpoint.health.show-details: always
+
+# Resilinece4j Properties
+resilience4j:
+  event-consumer-buffer-size: 10
+  circuitbreaker.instances.inventory:
+    registerHealthIndicator: true
+    slidingWindowType: COUNT_BASED
+    slidingWindowSize: 10
+    failureRateThreshold: 50
+    waitDurationInOpenState: 5s
+    permittedNumberOfCallsInHalfOpenState: 3
+    automaticTransitionFromOpenToHalfOpenEnabled: true
+    minimum-number-of-calls: 5
+  #Resilience4J Timeout Properties
+  timelimiter.instances.inventory.timeout-duration: 3s
+  #Resilience4J Retry Properties
+  retry.instances.inventory:
+    max-attempts: 3
+    wait-duration: 5s

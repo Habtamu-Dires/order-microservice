@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "OrderPlacedEvent",
+  "namespace": "com.hab.order_service.event",
+  "fields": [
+    { "name": "orderNumber", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "firstname", "type": "string", "default":""},
+    { "name": "lastname", "type": "string", "default":"" }
+  ]
+}
